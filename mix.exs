@@ -14,7 +14,7 @@ defmodule DockerTest.Mixfile do
   #
   # Type `mix help compile.app` for more information
   def application do
-    [applications: [:logger]]
+    [applications: [:httpoison, :logger, :dockerex]]
   end
 
   # Dependencies can be Hex packages:
@@ -27,6 +27,8 @@ defmodule DockerTest.Mixfile do
   #
   # Type `mix help deps` for more examples and options
   defp deps do
-    []
+    [{:dockerex, "~> 0.1.0"},
+     {:poison, "~> 2.2.0"},
+     {:httpoison, "~> 0.12.0", override: true}]
   end
 end
