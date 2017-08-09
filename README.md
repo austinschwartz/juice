@@ -1,4 +1,4 @@
-DockerTest
+Juice
 ==========
 
-** TODO: Add description **
+![Picture of some delicious Orange Juice](orangejuice.jpg)
