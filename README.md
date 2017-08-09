@@ -8,7 +8,7 @@ Juice
   host: "http://xxx:2376/"
 ```
 
-2. Directories are hardcoded right now, but they're listed at he top of the juice.ex file. On the docker host, it looks like this:
+2. Directories are hardcoded right now, but they're listed at the top of the juice.ex file. On the docker host, it looks like this:
 
 ```
 [~/testcases] : tree                                                                         11:44:16
