@@ -1,4 +1,4 @@
-defmodule DockerTest do
+defmodule Juice do
   require MyConstants
   alias MyConstants, as: Const
   def headers do
@@ -17,17 +17,17 @@ defmodule DockerTest do
               Const.testcases_src <> ":" <> Const.testcases_dst #<> ":ro"
             ]
           }
-        }, DockerTest.headers, Const.opt)
+        }, Juice.headers, Const.opt)
       result["Id"]
     end
 
     def start(cid) do
-      Dockerex.Client.post("containers/#{cid}/start", "", DockerTest.headers, Const.opt)
+      Dockerex.Client.post("containers/#{cid}/start", "", Juice.headers, Const.opt)
       cid
     end
 
     def kill(cid) do
-      Dockerex.Client.post("containers/#{cid}/kill", "", DockerTest.headers, Const.opt)
+      Dockerex.Client.post("containers/#{cid}/kill", "", Juice.headers, Const.opt)
       cid
     end
   end
@@ -43,13 +43,13 @@ defmodule DockerTest do
           "Privileged": true,
           "Tty": true,
           "User": "123:456"
-        }, DockerTest.headers, Const.opt)
+        }, Juice.headers, Const.opt)
       exec["Id"]
     end
 
     def start(eid) do
       Dockerex.Client.post("exec/#{eid}/start", 
-        %{"Detach": false, "Tty": true}, DockerTest.headers, Const.opt)
+        %{"Detach": false, "Tty": true}, Juice.headers, Const.opt)
     end
   end
 
