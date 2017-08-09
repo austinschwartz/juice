@@ -1,6 +1,11 @@
 defmodule DockerTest do
   require MyConstants
   alias MyConstants, as: Const
+  def headers do
+    {:ok , hostname} = :inet.gethostname
+    %{"Content-Type" => "application/json", "Host" => hostname}
+  end
+
   defmodule Container do
     def create() do
       result = Dockerex.Client.post("containers/create", 
@@ -9,20 +14,20 @@ defmodule DockerTest do
           "HostConfig": %{
             "RestartPolicy": %{ "Name": "always"},
             "Binds": [
-              Const.testcases_src <> ":" <> Const.testcases_dst <> ":ro"
+              Const.testcases_src <> ":" <> Const.testcases_dst #<> ":ro"
             ]
           }
-        })
+        }, DockerTest.headers, Const.opt)
       result["Id"]
     end
 
     def start(cid) do
-      Dockerex.Client.post("containers/#{cid}/start")
+      Dockerex.Client.post("containers/#{cid}/start", "", DockerTest.headers, Const.opt)
       cid
     end
 
     def kill(cid) do
-      Dockerex.Client.post("containers/#{cid}/kill")
+      Dockerex.Client.post("containers/#{cid}/kill", "", DockerTest.headers, Const.opt)
       cid
     end
   end
@@ -30,20 +35,34 @@ defmodule DockerTest do
   defmodule Exec do
     def create(cid, command) do
       exec = Dockerex.Client.post("containers/#{cid}/exec", 
-        %{#"AttachStdin": true,
+        %{
           "AttachStdout": true,
           "AttachStderr": true,
           "Cmd": command,
           "DetachKeys": "ctrl-p,ctrl-q",
           "Privileged": true,
           "Tty": true,
-          "User": "123:456"})
+          "User": "123:456"
+        }, DockerTest.headers, Const.opt)
       exec["Id"]
     end
 
     def start(eid) do
-      Dockerex.Client.post("exec/#{eid}/start", %{"Detach": false,"Tty": true})
+      Dockerex.Client.post("exec/#{eid}/start", 
+        %{"Detach": false, "Tty": true}, DockerTest.headers, Const.opt)
     end
+  end
+
+  def infile(problem_id, test_id) do
+    "/testcases/#{problem_id}/tests/i#{test_id}.txt"
+  end
+
+  def solfile(problem_id, test_id) do
+    "/testcases/#{problem_id}/tests/o#{test_id}.txt"
+  end
+
+  def outfile(problem_id, test_id, user_id) do
+    "#{Const.testcases_dst}/#{problem_id}/#{user_id}/#{test_id}.txt"
   end
 
   def build_command(user_id, problem_id, test_id, language) do
@@ -51,30 +70,44 @@ defmodule DockerTest do
       case language do
         "Java" ->
           entrypoint = "Main"
-          infile = "/testcases/#{problem_id}/i#{test_id}.txt"
-          "java -cp #{Const.testcases_dst}/#{problem_id}/#{user_id} #{entrypoint} < #{infile}"
-        default ->
+          infile = infile(problem_id, test_id)
+          outfile = outfile(problem_id, test_id, user_id)
+          "java -cp #{Const.testcases_dst}/#{problem_id}/#{user_id} #{entrypoint} < #{infile} > #{outfile}; cat #{outfile}"
+        _ ->
           raise "only java for now"
       end
     ]
   end
 
-  def test(user_id, problem_id, test_id, program) do
+  def test(user_id, problem_id, test_id, language) do
     cid = Container.create()
        |> Container.start()
 
     time1 = :os.system_time(:millisecond)
-    output = Exec.create(cid, build_command(user_id, problem_id, test_id, "Java"))
+    output = Exec.create(cid, build_command(user_id, problem_id, test_id, language))
           |> Exec.start()
     time2 = :os.system_time(:millisecond)
 
+    outfile = outfile(problem_id, test_id, user_id)
+    solfile = solfile(problem_id, test_id)
+    diff = Exec.create(cid, ["diff", "#{outfile}", "#{solfile}"])
+          |> Exec.start()
+    
     cid |> Container.kill()
-
-    %{
-      output: output,
-      time: time2 - time1
-    }
-
+    case output do
+      nil ->
+        %{
+          status: "error",
+          message: output
+        }
+      _ ->
+        %{
+          status: "success",
+          output: output,
+          diff: diff,
+          time: time2 - time1
+        }
+    end
   end
 
   def run(command) do
