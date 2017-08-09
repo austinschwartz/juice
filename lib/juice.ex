@@ -1,6 +1,9 @@
 defmodule Juice do
-  require MyConstants
-  alias MyConstants, as: Const
+  def imagename, do: "nonis/baseimage"
+  def testcases_src, do: "/home/nonis/testcases"
+  def testcases_dst, do: "/testcases"
+  def opt, do: [connect_timeout: 1000000, recv_timeout: 1000000, timeout: 1000000]
+
   def headers do
     {:ok , hostname} = :inet.gethostname
     %{"Content-Type" => "application/json", "Host" => hostname}
@@ -9,25 +12,25 @@ defmodule Juice do
   defmodule Container do
     def create() do
       result = Dockerex.Client.post("containers/create", 
-        %{"Image": Const.imagename,
+        %{"Image": Juice.imagename,
           "Tty": true,
           "HostConfig": %{
             "RestartPolicy": %{ "Name": "always"},
             "Binds": [
-              Const.testcases_src <> ":" <> Const.testcases_dst #<> ":ro"
+              Juice.testcases_src <> ":" <> Juice.testcases_dst #<> ":ro"
             ]
           }
-        }, Juice.headers, Const.opt)
+        }, Juice.headers, Juice.opt)
       result["Id"]
     end
 
     def start(cid) do
-      Dockerex.Client.post("containers/#{cid}/start", "", Juice.headers, Const.opt)
+      Dockerex.Client.post("containers/#{cid}/start", "", Juice.headers, Juice.opt)
       cid
     end
 
     def kill(cid) do
-      Dockerex.Client.post("containers/#{cid}/kill", "", Juice.headers, Const.opt)
+      Dockerex.Client.post("containers/#{cid}/kill", "", Juice.headers, Juice.opt)
       cid
     end
   end
@@ -43,13 +46,13 @@ defmodule Juice do
           "Privileged": true,
           "Tty": true,
           "User": "123:456"
-        }, Juice.headers, Const.opt)
+        }, Juice.headers, Juice.opt)
       exec["Id"]
     end
 
     def start(eid) do
       Dockerex.Client.post("exec/#{eid}/start", 
-        %{"Detach": false, "Tty": true}, Juice.headers, Const.opt)
+        %{"Detach": false, "Tty": true}, Juice.headers, Juice.opt)
     end
   end
 
@@ -62,7 +65,7 @@ defmodule Juice do
   end
 
   def outfile(problem_id, test_id, user_id) do
-    "#{Const.testcases_dst}/#{problem_id}/#{user_id}/#{test_id}.txt"
+    "#{Juice.testcases_dst}/#{problem_id}/#{user_id}/#{test_id}.txt"
   end
 
   def build_command(user_id, problem_id, test_id, language) do
@@ -72,7 +75,7 @@ defmodule Juice do
           entrypoint = "Main"
           infile = infile(problem_id, test_id)
           outfile = outfile(problem_id, test_id, user_id)
-          "java -cp #{Const.testcases_dst}/#{problem_id}/#{user_id} #{entrypoint} < #{infile} > #{outfile}; cat #{outfile}"
+          "java -cp #{Juice.testcases_dst}/#{problem_id}/#{user_id} #{entrypoint} < #{infile} > #{outfile}; cat #{outfile}"
         _ ->
           raise "only java for now"
       end
