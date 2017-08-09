@@ -34,3 +34,9 @@ Juice
         ├── o4.txt
 
 ```
+
+3. Then run with the following:
+```elixir
+iex(2)> Juice.test("nonis", "00001", "1", "Java")                                 
+%{diff: nil, output: "Lobster\r\n", status: "success", time: 251}
+```
