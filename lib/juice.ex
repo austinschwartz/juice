@@ -54,6 +54,20 @@ defmodule Juice do
       Dockerex.Client.post("exec/#{eid}/start", 
         %{"Detach": false, "Tty": true}, Juice.headers, Juice.opt)
     end
+
+    def test(cid, user_id, problem_id, test_id, language) do
+      time1 = :os.system_time(:millisecond)
+      output = Exec.create(cid, Juice.build_command(user_id, problem_id, test_id, language))
+            |> Exec.start()
+      time2 = :os.system_time(:millisecond)
+      res = %{output: output, time: time2 - time1}
+      case output do
+        nil ->
+          {:error, res}
+        _ ->
+          {:success, res}
+      end
+    end
   end
 
   def infile(problem_id, test_id) do
@@ -86,10 +100,14 @@ defmodule Juice do
     cid = Container.create()
        |> Container.start()
 
-    time1 = :os.system_time(:millisecond)
-    output = Exec.create(cid, build_command(user_id, problem_id, test_id, language))
-          |> Exec.start()
-    time2 = :os.system_time(:millisecond)
+    {status, output} = Exec.test(cid, user_id, problem_id, test_id, language)
+    if status == :error do
+      Container.kill(cid)
+      %{
+        status: "error",
+        result: output
+      }
+    end
 
     outfile = outfile(problem_id, test_id, user_id)
     solfile = solfile(problem_id, test_id)
@@ -97,20 +115,11 @@ defmodule Juice do
           |> Exec.start()
     
     cid |> Container.kill()
-    case output do
-      nil ->
-        %{
-          status: "error",
-          message: output
-        }
-      _ ->
-        %{
-          status: "success",
-          output: output,
-          diff: diff,
-          time: time2 - time1
-        }
-    end
+    %{
+      status: "success",
+      result: output,
+      diff: diff,
+    }
   end
 
   def run(command) do

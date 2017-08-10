@@ -35,8 +35,17 @@ Juice
 
 ```
 
-3. Then run with the following:
+3. Success Example:
 ```elixir
-iex(2)> Juice.test("nonis", "00001", "1", "Java")                                 
-%{diff: nil, output: "Lobster\r\n", status: "success", time: 251}
+iex(2)> Juice.test("nonis", "00001", "1", "Java")
+
+%{diff: nil, result: %{output: "Lobster\r\n", time: 484}, status: "success"}
+```
+
+Failure Example:
+```elixir
+iex(2)> Juice.test("nonis", "00001", "10", "Java")
+
+%{diff: "1c1\r\n< Lobster\r\n---\r\n> No Lobster\r\n",
+  result: %{output: "Lobster\r\n", time: 225}, status: "success"}
 ```
