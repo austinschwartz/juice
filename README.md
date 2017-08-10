@@ -39,13 +39,18 @@ Juice
 ```elixir
 iex(2)> Juice.test("nonis", "00001", "1", "Java")
 
-%{diff: nil, result: %{output: "Lobster\r\n", time: 484}, status: "success"}
+%{diff: nil,
+  given: %{language: "Java", problem_id: "00001", test_id: "10",
+      user_id: "nonis"}, message: "success",
+        result: %{output: "Lobster\r\n", time: 232}, status: :success}
 ```
 
 Failure Example:
 ```elixir
 iex(2)> Juice.test("nonis", "00001", "10", "Java")
 
-%{diff: "1c1\r\n< Lobster\r\n---\r\n> No Lobster\r\n",
-  result: %{output: "Lobster\r\n", time: 225}, status: "success"}
+%{diff: "1c1\r\n< Lobster\r\n---\r\n> no Lobster\r\n",
+  given: %{language: "Java", problem_id: "00001", test_id: "10",
+      user_id: "nonis"}, message: "output differed",
+        result: %{output: "Lobster\r\n", time: 378}, status: :failure}
 ```

@@ -100,11 +100,20 @@ defmodule Juice do
     cid = Container.create()
        |> Container.start()
 
+    given = %{
+      user_id: user_id,
+      problem_id: problem_id,
+      test_id: test_id,
+      language: language
+    }
+
     {status, output} = Exec.test(cid, user_id, problem_id, test_id, language)
     if status == :error do
       Container.kill(cid)
       %{
-        status: "error",
+        status: :failure,
+        message: "failed running given code",
+        given: given,
         result: output
       }
     end
@@ -112,14 +121,29 @@ defmodule Juice do
     outfile = outfile(problem_id, test_id, user_id)
     solfile = solfile(problem_id, test_id)
     diff = Exec.create(cid, ["diff", "#{outfile}", "#{solfile}"])
-          |> Exec.start()
+        |> Exec.start()
     
+    res = case diff do
+      nil ->
+        %{
+          status: :success,
+          message: "success",
+          result: output,
+          given: given,
+          diff: diff,
+        }
+      _ ->
+        %{
+          status: :failure,
+          message: "output differed",
+          result: output,
+          given: given,
+          diff: diff,
+        }
+    end
+
     cid |> Container.kill()
-    %{
-      status: "success",
-      result: output,
-      diff: diff,
-    }
+    res
   end
 
   def run(command) do
