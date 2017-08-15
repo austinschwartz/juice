@@ -61,9 +61,8 @@ defmodule Juice do
             |> Exec.start()
       time2 = :os.system_time(:millisecond)
       res = %{output: output, time: time2 - time1}
+      # TODO need to pull stderr, and throw a {:error, msg} on any errors
       case output do
-        nil ->
-          {:error, res}
         _ ->
           {:success, res}
       end
@@ -109,6 +108,7 @@ defmodule Juice do
 
     {status, output} = Exec.test(cid, user_id, problem_id, test_id, language)
     if status == :error do
+      IO.puts "killing container, error"
       Container.kill(cid)
       %{
         status: :failure,
@@ -123,27 +123,26 @@ defmodule Juice do
     diff = Exec.create(cid, ["diff", "#{outfile}", "#{solfile}"])
         |> Exec.start()
     
-    res = case diff do
+    IO.puts "killing container"
+    Container.kill(cid)
+
+    %{
+      result: output,
+      given: given,
+      diff: diff
+    } |> Map.merge(
+    case diff do
       nil ->
         %{
           status: :success,
-          message: "success",
-          result: output,
-          given: given,
-          diff: diff,
+          message: "success"
         }
       _ ->
         %{
           status: :failure,
           message: "output differed",
-          result: output,
-          given: given,
-          diff: diff,
         }
-    end
-
-    cid |> Container.kill()
-    res
+    end)
   end
 
   def run(command) do
