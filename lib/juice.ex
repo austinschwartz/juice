@@ -30,7 +30,6 @@ defmodule Juice do
     end
 
     def kill(cid) do
-      Dockerex.Client.post("containers/#{cid}/kill", "", Juice.headers, Juice.opt)
       Dockerex.Client.delete("containers/#{cid}?force=true", Juice.headers, Juice.opt)
       cid
     end
