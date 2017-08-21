@@ -3,6 +3,8 @@ Juice
 
 ![Picture of some delicious Orange Juice](orangejuice.jpg)
 
+[![Build Status](https://api.travis-ci.org/austinschwartz/juice.svg)](https://travis-ci.org/austinschwartz/juice)
+
 1. Add your docker host to the config/config.ex, including the ssl information if you want (see: Dockerex readme):
 ```
   host: "http://xxx:2376/"
