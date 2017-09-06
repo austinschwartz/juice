@@ -28,4 +28,14 @@ defmodule Docker.Client.Container do
     Docker.Rest.delete("containers/#{cid}?force=true")
     cid
   end
+
+  def get_all() do
+    Docker.Rest.get("containers/json") 
+      |> Enum.map(fn(x) -> x["Id"] end)
+  end
+
+  def kill_all() do
+    get_all() 
+      |> Enum.each(fn(cid) -> kill(cid) end)
+  end
 end

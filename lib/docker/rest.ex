@@ -24,7 +24,7 @@ defmodule Docker.Rest do
     Logger.debug "Sending GET request to the Docker HTTP API: #{base_url() <> resource}"
     base_url() <> resource
     |> HTTPoison.get!(headers, Keyword.merge(options(), opt))
-    |> decode_body
+    |> decode
   end
 
   @doc """
@@ -35,7 +35,7 @@ defmodule Docker.Rest do
     data = Poison.encode! data
     base_url() <> resource
     |> HTTPoison.post!(data, headers, Keyword.merge(options(), opt))
-    |> decode_body
+    |> decode
   end
 
   @doc """
@@ -47,12 +47,12 @@ defmodule Docker.Rest do
     |> HTTPoison.delete!(headers, Keyword.merge(options(), opt))
   end
 
-  defp decode_body(%HTTPoison.Response{body: ""}) do
+  defp decode(%HTTPoison.Response{body: ""}) do
     Logger.debug "Empty response"
     :nil
   end
 
-  defp decode_body(%HTTPoison.Response{body: body}) do
+  defp decode(%HTTPoison.Response{body: body, status_code: status_code, headers: headers}) do
     Logger.debug "Decoding Docker API response: #{inspect body}"
     case Poison.decode(body) do
       {:ok, dict} -> dict
