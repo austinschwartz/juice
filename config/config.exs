@@ -23,7 +23,9 @@ use Mix.Config
 #
 #     import_config "#{Mix.env}.exs"
 
-config :dockerex,
-host: "YOURIP:2376",
-options: [
-]
+config :juice,
+  docker_host: "http+unix://%2Fvar%2Frun%2Fdocker.sock/",
+  options: [connect_timeout: 10000, recv_timeout: 10000, timeout: 10000],
+  imagename: "nonis/baseimage",
+  testcases_src: "/home/nonis/testcases",
+  testcases_dst: "/testcases"

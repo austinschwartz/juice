@@ -10,25 +10,13 @@ defmodule Juice.Mixfile do
      deps: deps()]
   end
 
-  # Configuration for the OTP application
-  #
-  # Type `mix help compile.app` for more information
   def application do
-    [applications: [:httpoison, :logger, :dockerex]]
+    [applications: [:httpoison, :logger, :maru]]
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:mydep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1.0"}
-  #
-  # Type `mix help deps` for more examples and options
   defp deps do
-    [{:dockerex, "~> 0.1.0"},
-     {:poison, "~> 2.2.0"},
-     {:httpoison, "~> 0.12.0", override: true}]
+    [ {:poison, "~> 3.1"},
+     {:httpoison, "~> 0.13"},
+     {:maru, "~> 0.12.3"}]
   end
 end
